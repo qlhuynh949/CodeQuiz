@@ -217,6 +217,9 @@ let interval
 
 //startup splash page
 const createStartup = function () {
+
+  showViewHighScore()
+
   let quizCard = document.createElement('div')
   quizCard.className = "card"
 
@@ -260,6 +263,8 @@ const showScore = function () {
 }
 
 const showHighScore = function () {
+  timerDisplay.innerHTML = ""
+  leftDisplay.innerHTML = ""
   middleDisplay.innerHTML = ""
   let finalScore = localStorage.getItem('correctAnswers')
   let Card = createHighScoreCard()
@@ -277,7 +282,7 @@ const createHighScoreCard = function () {
   let highScoreCardTitle = document.createElement('h1')
   highScoreCardTitle.className = "card-title"
   highScoreCardTitle.id = "HighScoreTitle"
-  highScoreCardTitle.textContent = "Hight Scores"
+  highScoreCardTitle.textContent = "High Scores"
   let highScoreTitleHR = document.createElement('hr')
   highScoreTitleHR.id = "descriptionLine "
 
@@ -286,7 +291,7 @@ const createHighScoreCard = function () {
 
   for (let i = 0; i < highScore.length; i++) {
     let itemElem = document.createElement('li')
-    itemElem.textContent = 'Initials: '+ highScore[i].initials + ' - Score: ' + highScore[i].score
+    itemElem.textContent = 'Initials: ' + highScore[i].initials + ' - Score: ' + highScore[i].score
     highScoreList.append(itemElem)
   }
 
@@ -312,7 +317,9 @@ const createHighScoreCard = function () {
   highScoreCardBody.append(highScoreCardTitle)
   highScoreCardBody.append(highScoreTitleHR)
   highScoreCardBody.append(highScoreCardNewLine1)
-  highScoreCardBody.append(highScoreList)
+  if (highScore.length > 0) {
+    highScoreCardBody.append(highScoreList)
+  }
   highScoreCardBody.append(highScoreCardNewLine2)
   highScoreCardBody.append(goBackButton)
   highScoreCardBody.append(clearButton)
@@ -466,10 +473,31 @@ const startQuiz = function () {
 
 }
 
+const showViewHighScore = function(){
+
+  let lnkHighScore = document.createElement("a")
+  // let link = document.createTextNode("View High Scores")
+  // lnkHighScore.append(link)
+  leftDisplay.innerHTML = ""
+
+  lnkHighScore.textContent ="High Scores"
+  lnkHighScore.addEventListener('click', function () {
+    clearInterval(interval)
+    timerDisplay.innerHTML = ""
+    middleDisplay.innerHTML = ""
+    leftDisplay.innerHTML = ""
+    let Card = createHighScoreCard()
+    middleDisplay.append(Card)
+  })
+  leftDisplay.append(lnkHighScore)
+
+}
+
 const startTimeQuiz = function () {
   correctAnswers = 0
   wrongAnswers = 0
-
+  timerDisplay.innerHTML =""
+  showViewHighScore()
   startCountDown()
   createQuiz(quiz[index])
 
@@ -496,15 +524,18 @@ document.addEventListener('click', function (event) {
     localStorage.setItem('highScores', JSON.stringify(highScore))
     showHighScore()
   }
-  if (event.target.id == 'highScoreClear')
-  {
-    localStorage.setItem('highScores', JSON.stringify([]))
-    showHighScore()
-  }
-  if (event.target.id =='highScoreGoBack')
-  {
+  if (event.target.id == 'highScoreClear') {
     middleDisplay.innerHTML = ""
-    createStartup()    
+    highScore = []
+    localStorage.setItem('highScores', JSON.stringify(highScore))
+    timerDisplay.innerHTML = ""
+    leftDisplay.innerHTML = ""
+    let Card = createHighScoreCard()
+    middleDisplay.append(Card)
+  }
+  if (event.target.id == 'highScoreGoBack') {
+    middleDisplay.innerHTML = ""
+    createStartup()
   }
 
   //Detects when a choice is made
