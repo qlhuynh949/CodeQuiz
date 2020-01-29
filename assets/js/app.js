@@ -1,8 +1,3 @@
-document.addEventListener('click', function (e) {
-  if (e.target && e.target.id == 'btnStartQuiz') {
-    startQuiz()
-  }
-});
 
 let quiz = [{
   question: 'JavaScript can be written',
@@ -269,7 +264,6 @@ const showHighScore = function () {
   let finalScore = localStorage.getItem('correctAnswers')
   let Card = createHighScoreCard()
   middleDisplay.append(Card)
-
 }
 
 const createHighScoreCard = function () {
@@ -496,6 +490,7 @@ const showViewHighScore = function(){
 const startTimeQuiz = function () {
   correctAnswers = 0
   wrongAnswers = 0
+  index = 0
   timerDisplay.innerHTML =""
   showViewHighScore()
   startCountDown()
@@ -513,6 +508,9 @@ const createQuiz = function (quiz) {
 
 
 document.addEventListener('click', function (event) {
+  if (event.target && event.target.id == 'btnStartQuiz') {
+    startQuiz()
+  }
 
   if (event.target.id == 'ScoreSubmit') {
 
