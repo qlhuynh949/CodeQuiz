@@ -1,4 +1,3 @@
-
 let quiz = [{
   question: 'JavaScript can be written',
   id: 1,
@@ -200,7 +199,6 @@ The output for the above statement would be:`,
 
 
 let correctAnswers = localStorage.getItem('correctAnswers') || 0 //Tracks correctAnswers
-let wrongAnswers = localStorage.getItem('wrongAnswers') || 0 //Tracks number of wrong answers
 let countDown = localStorage.getItem('countDown') || 120 //2 minutes is 120 seconds
 let index = 0 //This is the question index
 let highScore = JSON.parse(localStorage.getItem('highScores')) || [] //Array to keep track of high scores
@@ -209,11 +207,30 @@ let timerDisplay = document.getElementById('countDisplay')
 let leftDisplay = document.getElementById('leftSide')
 let subtractTime = 10 //every wrong answer subtract 10 seconds
 let interval
+let shuffleQuiz = []
+let shuffleChoices = []
 
-//startup splash page
-const createStartup = function () {
+//Render functions
 
-  showViewHighScore()
+//Render High Score link  to view high score on right side
+const renderHighScoreLink = () => {
+  let lnkHighScore = document.createElement("a")
+  leftDisplay.innerHTML = ""
+  lnkHighScore.textContent = "High Scores"
+  lnkHighScore.addEventListener('click', function () {
+    clearInterval(interval)
+    timerDisplay.innerHTML = ""
+    middleDisplay.innerHTML = ""
+    leftDisplay.innerHTML = ""
+    let Card = renderHighScoreCard()
+    middleDisplay.append(Card)
+  })
+  leftDisplay.append(lnkHighScore)
+}
+
+//Render Quiz Startup Page
+const renderQuizStartup = () => {
+  renderHighScoreLink()
 
   let quizCard = document.createElement('div')
   quizCard.className = "card"
@@ -240,88 +257,14 @@ const createStartup = function () {
   quizCardStartButton.id = "btnStartQuiz"
 
   let quizCardNewLine = document.createElement('br')
-
   quizCardBody.append(quizCardTitle)
   quizCardBody.append(quizTitleHR)
   quizCardBody.append(quizCardText)
   quizCardBody.append(quizCardNewLine)
   quizCardBody.append(quizCardStartButton)
   middleDisplay.append(quizCardBody)
-
 }
-
-const showScore = function () {
-  middleDisplay.innerHTML = ""
-  let finalScore = localStorage.getItem('correctAnswers')
-  let Card = createScoreCard(finalScore)
-  middleDisplay.append(Card)
-}
-
-const showHighScore = function () {
-  timerDisplay.innerHTML = ""
-  leftDisplay.innerHTML = ""
-  middleDisplay.innerHTML = ""
-  let finalScore = localStorage.getItem('correctAnswers')
-  let Card = createHighScoreCard()
-  middleDisplay.append(Card)
-}
-
-const createHighScoreCard = function () {
-  let highScoreCard = document.createElement('div')
-  highScoreCard.className = "card"
-
-  let highScoreCardBody = document.createElement('div')
-  highScoreCardBody.className = "card-body"
-
-  let highScoreCardTitle = document.createElement('h1')
-  highScoreCardTitle.className = "card-title"
-  highScoreCardTitle.id = "HighScoreTitle"
-  highScoreCardTitle.textContent = "High Scores"
-  let highScoreTitleHR = document.createElement('hr')
-  highScoreTitleHR.id = "descriptionLine "
-
-  let highScoreList = document.createElement('ol')
-  highScoreList.className = "card-text"
-
-  for (let i = 0; i < highScore.length; i++) {
-    let itemElem = document.createElement('li')
-    itemElem.textContent = 'Initials: ' + highScore[i].initials + ' - Score: ' + highScore[i].score
-    highScoreList.append(itemElem)
-  }
-
-
-  let goBackButton = document.createElement('button')
-  goBackButton.classList.add('btn')
-  goBackButton.classList.add('btn-info')
-  goBackButton.id = 'highScoreGoBack'
-  goBackButton.textContent = "Go Back"
-
-  let clearButton = document.createElement('button')
-  clearButton.classList.add('btn')
-  clearButton.classList.add('btn-info')
-  clearButton.id = 'highScoreClear'
-  clearButton.textContent = "Clear"
-
-
-  let highScoreCardNewLine1 = document.createElement('br')
-  let highScoreCardNewLine2 = document.createElement('br')
-  let highScoreCardNewLine3 = document.createElement('br')
-
-
-  highScoreCardBody.append(highScoreCardTitle)
-  highScoreCardBody.append(highScoreTitleHR)
-  highScoreCardBody.append(highScoreCardNewLine1)
-  if (highScore.length > 0) {
-    highScoreCardBody.append(highScoreList)
-  }
-  highScoreCardBody.append(highScoreCardNewLine2)
-  highScoreCardBody.append(goBackButton)
-  highScoreCardBody.append(clearButton)
-
-  return highScoreCardBody
-}
-
-const createScoreCard = function (score) {
+const renderScoreCard = (score) => {
   let scoreCard = document.createElement('div')
   scoreCard.className = "card"
 
@@ -341,7 +284,6 @@ const createScoreCard = function (score) {
   scoreCardText.textContent = `Your final score is ${score}`
 
   let scoreCardForm = document.createElement('form')
-
   let scoreParagraph = document.createElement('p')
   let scoreLabel = document.createElement('label')
   scoreLabel.for = 'scoreInput'
@@ -369,7 +311,6 @@ const createScoreCard = function (score) {
   let scoreCardNewLine2 = document.createElement('br')
   let scoreCardNewLine3 = document.createElement('br')
 
-
   scoreCardBody.append(scoreCardTitle)
   scoreCardBody.append(scoreTitleHR)
   scoreCardBody.append(scoreCardText)
@@ -379,14 +320,10 @@ const createScoreCard = function (score) {
   scoreCardBody.append(scoreCardNewLine2)
   scoreCardBody.append(scoreSubmitButton)
   scoreCardBody.append(scoreCardNewLine3)
-
   return scoreCardBody
-
-
 }
-
 //Creates and renders Question Card
-const createQuestionCard = function (questionItem) {
+const renderQuestionCard = function (questionItem) {
   let questionCard = document.createElement('div')
   questionCard.className = "card"
 
@@ -427,14 +364,12 @@ const createQuestionCard = function (questionItem) {
   questionCardChoiceButton3.id = 'Question-' + questionItem.id + '-choice3'
   questionCardChoiceButton3.value = 'choice3'
 
-
   let questionCardChoiceButton4 = document.createElement('button')
   questionCardChoiceButton4.classList.add('btn')
   questionCardChoiceButton4.classList.add('btn-secondary')
   questionCardChoiceButton4.textContent = questionItem.choice4
   questionCardChoiceButton4.id = 'Question-' + questionItem.id + '-choice4'
   questionCardChoiceButton4.value = 'choice4'
-
 
   let questionCardNewLine1 = document.createElement('br')
   let questionCardNewLine2 = document.createElement('br')
@@ -460,61 +395,140 @@ const createQuestionCard = function (questionItem) {
   return questionCardBody
 
 }
+const renderHighScoreCard = function () {
+  let highScoreCard = document.createElement('div')
+  highScoreCard.className = "card"
+
+  let highScoreCardBody = document.createElement('div')
+  highScoreCardBody.className = "card-body"
+
+  let highScoreCardTitle = document.createElement('h1')
+  highScoreCardTitle.className = "card-title"
+  highScoreCardTitle.id = "HighScoreTitle"
+  highScoreCardTitle.textContent = "High Scores"
+  let highScoreTitleHR = document.createElement('hr')
+  highScoreTitleHR.id = "descriptionLine "
+
+  let highScoreList = document.createElement('ol')
+  highScoreList.className = "card-text"
+
+  for (let i = 0; i < highScore.length; i++) {
+    let itemElem = document.createElement('li')
+    itemElem.textContent = 'Initials: ' + highScore[i].initials + ' - Score: ' + highScore[i].score
+    highScoreList.append(itemElem)
+  }
+
+  let goBackButton = document.createElement('button')
+  goBackButton.classList.add('btn')
+  goBackButton.classList.add('btn-info')
+  goBackButton.id = 'highScoreGoBack'
+  goBackButton.textContent = "Go Back"
+
+  let clearButton = document.createElement('button')
+  clearButton.classList.add('btn')
+  clearButton.classList.add('btn-info')
+  clearButton.id = 'highScoreClear'
+  clearButton.textContent = "Clear"
+
+  let highScoreCardNewLine1 = document.createElement('br')
+  let highScoreCardNewLine2 = document.createElement('br')
+  let highScoreCardNewLine3 = document.createElement('br')
+
+  highScoreCardBody.append(highScoreCardTitle)
+  highScoreCardBody.append(highScoreTitleHR)
+  highScoreCardBody.append(highScoreCardNewLine1)
+  if (highScore.length > 0) {
+    highScoreCardBody.append(highScoreList)
+  }
+  highScoreCardBody.append(highScoreCardNewLine2)
+  highScoreCardBody.append(goBackButton)
+  highScoreCardBody.append(clearButton)
+
+  return highScoreCardBody
+}
+const showHighScore = () => {
+  timerDisplay.innerHTML = ""
+  leftDisplay.innerHTML = ""
+  middleDisplay.innerHTML = ""
+  let finalScore = localStorage.getItem('correctAnswers')
+  let Card = renderHighScoreCard()
+  middleDisplay.append(Card)
+}
+const showScore = () => {
+  middleDisplay.innerHTML = ""
+  let Card = renderScoreCard(localStorage.getItem('correctAnswers'))
+  middleDisplay.append(Card)
+}
+const shuffleArray = (a) => {
+  var j, x, i
+  for (i = a.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1))
+    x = a[i]
+    a[i] = a[j]
+    a[j] = x
+  }
+  return a
+}
+const idAjustQuizArray = (a) => {
+  for (i = 1; i < a.length; i++) {
+    a[i].id = i
+    let shuffleChoiceArray = shuffleArray(a[i].choices)
+    a[i].choices = shuffleChoiceArray
+  }
+  return a
+}
+const startTimeQuiz = () => {
+  correctAnswers = 0
+  index = 0
+  timerDisplay.innerHTML = ""
+  renderHighScoreLink()
+  //Every time the time quiz is started the questions are shuffled and so are the choices in each question
+  startCountDown()
+  showQuiz(quiz[index])
+}
+const startCountDown = () => {
+  setTimer(countDown, timerDisplay)
+}
+const showQuiz = (quiz) => {
+  middleDisplay.innerHTML = ""
+  let Card = renderQuestionCard(quiz)
+  middleDisplay.append(Card)
+}
 
 //Starts the timed quiz
-const startQuiz = function () {
+const startQuiz = () => {
   startTimeQuiz()
-
 }
 
-const showViewHighScore = function(){
-
-  let lnkHighScore = document.createElement("a")
-  // let link = document.createTextNode("View High Scores")
-  // lnkHighScore.append(link)
-  leftDisplay.innerHTML = ""
-
-  lnkHighScore.textContent ="High Scores"
-  lnkHighScore.addEventListener('click', function () {
-    clearInterval(interval)
-    timerDisplay.innerHTML = ""
-    middleDisplay.innerHTML = ""
-    leftDisplay.innerHTML = ""
-    let Card = createHighScoreCard()
-    middleDisplay.append(Card)
-  })
-  leftDisplay.append(lnkHighScore)
-
+const setTimer = (duration, display) => {
+  let timer = duration, minutes, seconds
+  interval = setInterval(() => {
+    minutes = parseInt(timer / 60, 10)
+    seconds = parseInt(timer % 60, 10)
+    minutes = minutes < 10 ? "0" + minutes : minutes
+    seconds = seconds < 10 ? "0" + seconds : seconds
+    display.textContent = "Time: " + minutes + ":" + seconds
+    if (timer === 0) {
+      clearInterval(interval)
+      showScore()
+    }
+    if (--timer < 0) {
+      timer = duration
+      clearInterval(interval)
+      showScore()
+    }
+    else {
+      localStorage.setItem('timeLeft', timer) // time left in seconds
+    }
+  }, 1000);
 }
 
-const startTimeQuiz = function () {
-  correctAnswers = 0
-  wrongAnswers = 0
-  index = 0
-  timerDisplay.innerHTML =""
-  showViewHighScore()
-  startCountDown()
-  createQuiz(quiz[index])
-
-}
-
-const createQuiz = function (quiz) {
-
-  middleDisplay.innerHTML = ""
-  let Card = createQuestionCard(quiz)
-  middleDisplay.append(Card)
-
-}
-
-
-document.addEventListener('click', function (event) {
+//----Event Listeners
+document.addEventListener('click', (event) => {
   if (event.target && event.target.id == 'btnStartQuiz') {
     startQuiz()
   }
-
   if (event.target.id == 'ScoreSubmit') {
-
-
     highScore.push({
       initials: document.getElementById('scoreInput').value,
       score: event.target.value
@@ -528,28 +542,24 @@ document.addEventListener('click', function (event) {
     localStorage.setItem('highScores', JSON.stringify(highScore))
     timerDisplay.innerHTML = ""
     leftDisplay.innerHTML = ""
-    let Card = createHighScoreCard()
+    let Card = renderHighScoreCard()
     middleDisplay.append(Card)
   }
   if (event.target.id == 'highScoreGoBack') {
     middleDisplay.innerHTML = ""
-    createStartup()
+    renderQuizStartup()
   }
-
   //Detects when a choice is made
   if (event.target.className == 'btn btn-secondary') {
     let clickId = event.target.id
     let clickIdArray = clickId.split('-')
     index = parseInt(clickIdArray[1]) - 1
-
     if (index < (quiz.length)) {
       let quizAnswer = quiz[index]
       let userChoice = event.target.value
-
       let domID = "Result" + quizAnswer.id
       let resultDisplay = ''
       let timeLeft = parseInt(localStorage.getItem('timeLeft')) // time left in seconds
-
       if (userChoice === quizAnswer.answer) {
         resultDisplay = "Correct Answer!"
         correctAnswers++
@@ -557,22 +567,16 @@ document.addEventListener('click', function (event) {
       }
       else {
         resultDisplay = "Incorrect Answer!"
-        wrongAnswers++
-
         timeLeft = timeLeft - subtractTime //Deduct 10 seconds for every wrong answer
         localStorage.setItem('timeLeft', timeLeft) // time left in seconds
-        localStorage.setItem('wrongAnswers', wrongAnswers)
         clearInterval(interval)
         setTimer(timeLeft, timerDisplay)
       }
-
       document.getElementById(domID).innerHTML = resultDisplay
       index++
-
-
       if (index < quiz.length && timeLeft > 0) {
         setTimeout(function () {
-          createQuiz(quiz[index])
+          showQuiz(quiz[index])
         }, 2000)
       }
       else {
@@ -585,45 +589,7 @@ document.addEventListener('click', function (event) {
       showScore()
     }
   }
-
 }
 )
-
-const startCountDown = function () {
-
-  setTimer(countDown, timerDisplay)
-}
-
-
-const setTimer = function (duration, display) {
-  let timer = duration, minutes, seconds;
-  interval = setInterval(function () {
-    minutes = parseInt(timer / 60, 10);
-    seconds = parseInt(timer % 60, 10);
-
-
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    display.textContent = "Time: " + minutes + ":" + seconds;
-
-    if (timer === 0) {
-      clearInterval(interval)
-      showScore()
-    }
-
-    if (--timer < 0) {
-      timer = duration
-      clearInterval(interval)
-      showScore()
-    }
-    else {
-      localStorage.setItem('timeLeft', timer) // time left in seconds
-    }
-  }, 1000);
-}
-
-
-
 //Execute
-createStartup()
+renderQuizStartup()
